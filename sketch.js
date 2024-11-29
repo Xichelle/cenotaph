@@ -6,9 +6,46 @@ let squareGraphic;
 let particleSystem;
 let drawing = [];
 
+let gifs = {};
+let activeAnimations = [];
+const MAX_ACTIVE_ANIMATIONS = 10;
+
+let currentScene = "opening"; // 'opening' or 'main'
+
+// Button
+let startButton;
 
 function preload() {
   faceMesh = ml5.faceMesh(options);
+
+  gifs['a'] = loadImage('animation/a.gif'); // GIF for key 'A'
+  gifs['b'] = loadImage('animation/b.gif'); // GIF for key 'B'
+  gifs['c'] = loadImage('animation/c.gif'); // GIF for key 'C'
+  gifs['d'] = loadImage('animation/d.gif'); // GIF for key 'D'
+  gifs['e'] = loadImage('animation/e.gif'); // GIF for key 'E'
+  gifs['f'] = loadImage('animation/f.gif'); // GIF for key 'F'
+  gifs['g'] = loadImage('animation/g.gif'); // GIF for key 'G'
+  gifs['h'] = loadImage('animation/h.gif'); // GIF for key 'H'
+  gifs['i'] = loadImage('animation/i.gif'); // GIF for key 'I'
+  gifs['j'] = loadImage('animation/j.gif'); // GIF for key 'J'
+  gifs['k'] = loadImage('animation/k.gif'); // GIF for key 'K'
+  gifs['l'] = loadImage('animation/l.gif'); // GIF for key 'L'
+  gifs['m'] = loadImage('animation/m.gif'); // GIF for key 'M'
+  gifs['n'] = loadImage('animation/n.gif'); // GIF for key 'N'
+  gifs['o'] = loadImage('animation/o.gif'); // GIF for key 'O'
+  gifs['p'] = loadImage('animation/p.gif'); // GIF for key 'P'
+  gifs['q'] = loadImage('animation/q.gif'); // GIF for key 'Q'
+  gifs['r'] = loadImage('animation/r.gif'); // GIF for key 'R'
+  gifs['s'] = loadImage('animation/s.gif'); // GIF for key 'S'
+  gifs['t'] = loadImage('animation/t.gif'); // GIF for key 'T'
+  gifs['u'] = loadImage('animation/u.gif'); // GIF for key 'U'
+  gifs['v'] = loadImage('animation/v.gif'); // GIF for key 'V'
+  gifs['w'] = loadImage('animation/w.gif'); // GIF for key 'W'
+  gifs['x'] = loadImage('animation/x.gif'); // GIF for key 'X'
+  gifs['y'] = loadImage('animation/y.gif'); // GIF for key 'Y'
+  gifs['z'] = loadImage('animation/z.gif'); // GIF for key 'Z'
+
+  openingImage = loadImage('tear.png'); // Replace with your image path
 }
 
 function setup() {
@@ -28,13 +65,48 @@ function setup() {
 
   // Start detecting faces
   faceMesh.detect(video, gotFaces);
+  startButton = createButton('...');
+  startButton.position(width / 2 - 80 , height / 2 + 25);
+  startButton.style('font-size', '20px');
+  startButton.style('padding', '10px 20px');
+  startButton.style('background-color', '#0a0a0a');
+  startButton.style('color', '#fff');
+  startButton.style('border', 'none');
+  startButton.style('border-radius', '5px');
+  startButton.style('cursor', 'pointer');
+
+  startButton.mousePressed(() => {
+    currentScene = "main"; // Switch to the main project
+    startButton.hide(); // Hide the button
+  });
 }
 
+
+
 function draw() {
-push()
-image(video, 0, 0, width, height);
-filter(GRAY);
-pop()
+  if (currentScene === "opening") {
+    drawOpeningScene();
+  } else if (currentScene === "main") {
+    drawMainProject();
+  }
+}
+
+function drawOpeningScene() {
+  background(200);
+  imageMode(CENTER);
+  image(openingImage, width / 2, height / 2, width, height);
+
+}
+
+
+function drawMainProject() {
+  //video
+  push()
+  image(video, 0, 0, width, height);
+  filter(GRAY);
+  pop()
+ 
+  //background color
   background(255)
   
   
@@ -60,6 +132,17 @@ pop()
       pop()
           }
   }
+// Update and display all active animations
+for (let i = activeAnimations.length - 1; i >= 0; i--) {
+  let anim = activeAnimations[i];
+  anim.update();
+  anim.show();
+
+  // Remove finished or out-of-bounds animations
+  if (anim.isFinished() || anim.y > height) {
+    activeAnimations.splice(i, 1);
+  }
+}
 
   // Draw the particle system
   particleSystem.update();
@@ -82,8 +165,52 @@ pop()
     particleSystem.addParticles(drawing);
     drawing = [];
   }
+
 }
 
+function keyPressed() {
+  if (gifs[key]) {
+    // Create a new animation instance below the eye section
+    let x = random(width / 4, (3 * width) / 4);
+    let y = random(height / 2, (3 * height) / 4); // Start below the eye section
+    activeAnimations.push(new AnimationInstance(gifs[key], x, y));
+  }
+}
+
+class AnimationInstance {
+  constructor(gif, x, y) {
+    this.gif = gif; // The GIF to display
+    this.x = x;
+    this.y = y;
+    this.finished = false;
+    this.speed = 1; // Falling speed
+
+    // Set the GIF to play and stop looping
+    this.gif.play();
+    this.gif.reset();
+    this.gif.looping = false;
+  }
+
+  update() {
+    // Move the animation down
+    this.y += this.speed;
+
+    // Check if the GIF has finished playing
+    if (this.gif.getCurrentFrame() === this.gif.numFrames() - 1) {
+      this.finished = true;
+    }
+  }
+
+  show() {
+    if (!this.finished) {
+      image(this.gif, this.x, this.y);
+    }
+  }
+
+  isFinished() {
+    return this.finished;
+  }
+}
 function gotFaces(results) {
   // Save the output to the faces variable
   faces = results;
